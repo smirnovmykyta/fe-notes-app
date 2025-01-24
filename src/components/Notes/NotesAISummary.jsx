@@ -1,11 +1,20 @@
 import { useRef, useState } from 'react';
+import {chat} from "@/api/proxyAIAPI.js";
+import {getMessageForNotesAnalyze} from "@/helpers/getMessageForNotesAnalyze.js";
 
 const NotesAISummary = ({ notes }) => {
   const modalRef = useRef();
-  const resultsRef = useRef();
+  const [analysis, setAnalysis] = useState({});
   const [stream, setStream] = useState(false);
 
-  const handleAISummary = async () => {};
+  const handleAISummary = async () => {
+    try {
+      const response = await chat(getMessageForNotesAnalyze(notes));
+      setAnalysis(response)
+    }catch (error){
+      console.error(error)
+    }
+  };
 
   return (
     <>
@@ -39,9 +48,8 @@ const NotesAISummary = ({ notes }) => {
           <div className='flex flex-col items-center gap-3'>
             <div
               className='textarea textarea-success w-full h-[400px] overflow-y-scroll'
-              ref={resultsRef}
             >
-              AI SUMMARY GOES HERE
+              {analysis.text ? analysis.text : "AI SUMMARY GOES HERE..."}
             </div>
             <button
               className='mt-5 btn bg-purple-500 hover:bg-purple-400 text-white'

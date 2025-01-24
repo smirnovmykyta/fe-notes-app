@@ -32,7 +32,7 @@ export async function chat(messages) {
             },
             {
                 headers: {
-                    Authorization: `Bearer ${import.meta.env.VITE_TOKEN}`,
+                    Authorization: `${import.meta.env.VITE_TOKEN}`,
                     'Content-Type': 'application/json',
                     provider: 'open-ai',
                     mode: `${import.meta.env.VITE_AI_MODE}`
