@@ -11,7 +11,6 @@ const NotesAISummary = ({ notes }) => {
     try {
       const response = await chat(getMessageForNotesAnalyze(notes));
       setAnalysis(response)
-      console.log(response)
     }catch (error){
       console.error(error)
     }
