@@ -1,19 +1,36 @@
 import { useRef, useState } from 'react';
-import {chat} from "@/api/proxyAIAPI.js";
+import {chat, streamChat} from "@/api/proxyAIAPI.js";
 import {getMessageForNotesAnalyze} from "@/helpers/getMessageForNotesAnalyze.js";
 
 const NotesAISummary = ({ notes }) => {
   const modalRef = useRef();
-  const [analysis, setAnalysis] = useState({});
+  const [analysis, setAnalysis] = useState("");
   const [stream, setStream] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleAISummary = async () => {
-    try {
-      const response = await chat(getMessageForNotesAnalyze(notes));
-      setAnalysis(response)
-      console.log(response)
-    }catch (error){
-      console.error(error)
+    setIsLoading(true);
+    setAnalysis("");
+
+    if (stream) {
+      try {
+        await streamChat(getMessageForNotesAnalyze(notes), (partialResponse) => {
+          setAnalysis((prev) => prev + partialResponse); // Обновляем состояние частями
+        });
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      try {
+        const response = await chat(getMessageForNotesAnalyze(notes));
+        setAnalysis(response.text)
+      } catch (error) {
+        console.error(error)
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -50,13 +67,16 @@ const NotesAISummary = ({ notes }) => {
             <div
               className='textarea textarea-success w-full h-[400px] overflow-y-scroll'
             >
-              {analysis.text ? analysis.text : "AI SUMMARY GOES HERE..."}
+              {isLoading
+                  ? "Loading..."
+                  : analysis || "AI SUMMARY GOES HERE..."}
             </div>
             <button
               className='mt-5 btn bg-purple-500 hover:bg-purple-400 text-white'
               onClick={handleAISummary}
+              disabled={isLoading}
             >
-              Gen AI summary ✨
+              {isLoading ? "Loading..." : "Gen AI summary ✨"}
             </button>
           </div>
         </div>
