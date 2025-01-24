@@ -12,9 +12,6 @@ const MoodAIAnalysis = ({ entries }) => {
       const response = await chat(getMessageForDiaryAnalyze(entries));
       const content = response.text.replace(/```json/g, "").replace(/```/g, "");
       setAnalysis(JSON.parse(content))
-      console.log(JSON.parse(content))
-      console.log(analysis.entries
-      )
     }catch (error){
       console.error(error)
     }
