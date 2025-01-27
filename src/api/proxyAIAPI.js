@@ -67,39 +67,46 @@ export async function streamChat(messages,  onData) {
             }
         )
 
-        const reader = response.data.pipeThrough(new TextDecoderStream()).getReader();
+        const reader = response.data.getReader();
+        console.log("reader " + reader)
+        const textDecoder = new TextDecoder();
 
         let done = false;
+        let partialData = "";
+
+
         while (!done) {
-            const { value, done: readerDone } = await reader.read();
-            done = readerDone;
-            if (value) {
-                // Парсим строку JSON, если это данные
-                const lines = value
-                    .split("\n")
-                    .map((line) => line.trim())
-                    .filter((line) => line && line.startsWith("data:"))
-                    .map((line) => line.replace(/^data: /, ""));
+            const { value, done: streamDone } = await reader.read();
+            done = streamDone;
 
-                // Обрабатываем каждый JSON-чанк
-                for (const line of lines) {
-                    if (line === "[DONE]") {
-                        done = true; // Конец стрима
-                        break;
-                    }
 
-                    try {
-                        const parsed = JSON.parse(line);
-                        const content = parsed.choices[0]?.delta?.content || "";
-                        onData(content); // Передаем данные в коллбэк
-                    } catch (err) {
-                        console.error("Error parsing stream chunk:", err, line);
-                    }
+            const chunk = textDecoder.decode(value, { stream: true });
+
+
+            partialData += chunk;
+
+
+            const lines = partialData.split("\n").map(line => line.trim()).filter(line => line.startsWith("data:"));
+
+
+            for (const line of lines) {
+                if (line === "data: [DONE]") {
+                    return;
                 }
+
+
+                const parsed = JSON.parse(line.replace("data: ", ""));
+                const content = parsed.choices[0]?.delta?.content || "";
+                console.log("content " + content)
+
+                onData(content);
             }
+
+
+            partialData = partialData.split("\n").slice(-1).join("\n");
         }
     } catch (error) {
-        console.error(error);
+        console.error("Error in streamChat:", error);
     }
 }
 
@@ -124,6 +131,5 @@ export async function generateAudio(text) {
         console.error(error);
     }
 }
-
 
 
