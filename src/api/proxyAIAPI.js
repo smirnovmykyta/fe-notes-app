@@ -50,25 +50,39 @@ export async function chat(messages) {
 
 export async function streamChat(messages,  onData) {
     try {
-        const response = await axios.post(`${import.meta.env.VITE_PROXY_OPENAI}/api/v1/chat/completions`,
-            {
+        // const response = await axios.post(`${import.meta.env.VITE_PROXY_OPENAI}/api/v1/chat/completions`,
+        //     {
+        //         model: 'gpt-4o',
+        //         messages: messages,
+        //         stream: true,
+        //     },
+        //     {
+        //         headers: {
+        //             Authorization: `${import.meta.env.VITE_TOKEN}`,
+        //             // 'Content-Type': 'application/json',
+        //             provider: 'open-ai',
+        //             mode: `${import.meta.env.VITE_AI_MODE}`
+        //         },
+        //         responseType: 'stream',
+        //     }
+        // )
+
+        const response = await fetch(`${import.meta.env.VITE_PROXY_OPENAI}/api/v1/chat/completions`, {
+            method: 'POST',
+            headers: {
+                Authorization: `${import.meta.env.VITE_TOKEN}`,
+                provider: 'open-ai',
+                mode: `${import.meta.env.VITE_AI_MODE}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
                 model: 'gpt-4o',
                 messages: messages,
                 stream: true,
-            },
-            {
-                headers: {
-                    Authorization: `${import.meta.env.VITE_TOKEN}`,
-                    'Content-Type': 'application/json',
-                    provider: 'open-ai',
-                    mode: `${import.meta.env.VITE_AI_MODE}`
-                },
-                responseType: 'stream',
-            }
-        )
+            }),
+        });
 
-        const reader = response.data.getReader();
-        console.log("reader " + reader)
+        const reader = response.body.getReader();
         const textDecoder = new TextDecoder();
 
         let done = false;
@@ -97,7 +111,7 @@ export async function streamChat(messages,  onData) {
 
                 const parsed = JSON.parse(line.replace("data: ", ""));
                 const content = parsed.choices[0]?.delta?.content || "";
-                console.log("content " + content)
+                // console.log("content " + content)
 
                 onData(content);
             }

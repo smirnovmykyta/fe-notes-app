@@ -13,14 +13,13 @@ const NotesAISummary = ({ notes }) => {
     setAnalysis("");
 
     if (stream) {
+      setIsLoading(false);
       try {
         await streamChat(getMessageForNotesAnalyze(notes), (partialResponse) => {
-          setAnalysis((prev) => prev + partialResponse); // Обновляем состояние частями
+          setAnalysis((prev) => prev + partialResponse);
         });
       } catch (error) {
         console.error(error);
-      } finally {
-        setIsLoading(false);
       }
     } else {
       try {
