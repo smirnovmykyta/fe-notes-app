@@ -6,20 +6,18 @@ const Charts = ({ aiSummary }) => {
 
     useEffect(() => {
 
-        // Преобразуем ответ в формат для диаграммы
         const sentimentCount = aiSummary.reduce((acc, entry) => {
             acc[entry.sentiment] = (acc[entry.sentiment] || 0) + 1;
             return acc;
         }, {});
-        console.log(sentimentCount)
-        // Формируем данные для диаграммы
+        
         const data = [
             { name: "Positive", value: sentimentCount["positive"] || 0 },
             { name: "Neutral", value: sentimentCount["neutral"] || 0 },
             { name: "Negative", value: sentimentCount["negative"] || 0 },
         ];
 
-        setSentimentData(data); // Обновляем состояние с данными для диаграммы
+        setSentimentData(data); 
     }, [aiSummary]);
 
     const COLORS = ["#00C49F", "#FFBB28", "#FF8042"];
