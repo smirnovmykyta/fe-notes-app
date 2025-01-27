@@ -48,6 +48,82 @@ export async function chat(messages) {
     }
 }
 
+export async function streamChat(messages,  onData) {
+    try {
+        // const response = await axios.post(`${import.meta.env.VITE_PROXY_OPENAI}/api/v1/chat/completions`,
+        //     {
+        //         model: 'gpt-4o',
+        //         messages: messages,
+        //         stream: true,
+        //     },
+        //     {
+        //         headers: {
+        //             Authorization: `${import.meta.env.VITE_TOKEN}`,
+        //             // 'Content-Type': 'application/json',
+        //             provider: 'open-ai',
+        //             mode: `${import.meta.env.VITE_AI_MODE}`
+        //         },
+        //         responseType: 'stream',
+        //     }
+        // )
+
+        const response = await fetch(`${import.meta.env.VITE_PROXY_OPENAI}/api/v1/chat/completions`, {
+            method: 'POST',
+            headers: {
+                Authorization: `${import.meta.env.VITE_TOKEN}`,
+                provider: 'open-ai',
+                mode: `${import.meta.env.VITE_AI_MODE}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                model: 'gpt-4o',
+                messages: messages,
+                stream: true,
+            }),
+        });
+
+        const reader = response.body.getReader();
+        const textDecoder = new TextDecoder();
+
+        let done = false;
+        let partialData = "";
+
+
+        while (!done) {
+            const { value, done: streamDone } = await reader.read();
+            done = streamDone;
+
+
+            const chunk = textDecoder.decode(value, { stream: true });
+
+
+            partialData += chunk;
+
+
+            const lines = partialData.split("\n").map(line => line.trim()).filter(line => line.startsWith("data:"));
+
+
+            for (const line of lines) {
+                if (line === "data: [DONE]") {
+                    return;
+                }
+
+
+                const parsed = JSON.parse(line.replace("data: ", ""));
+                const content = parsed.choices[0]?.delta?.content || "";
+                // console.log("content " + content)
+
+                onData(content);
+            }
+
+
+            partialData = partialData.split("\n").slice(-1).join("\n");
+        }
+    } catch (error) {
+        console.error("Error in streamChat:", error);
+    }
+}
+
 export async function generateAudio(text) {
     try {
         const response = await axios.post(`${import.meta.env.VITE_PROXY_OPENAI}/api/v1/audio/speech`,
@@ -69,6 +145,5 @@ export async function generateAudio(text) {
         console.error(error);
     }
 }
-
 
 

@@ -6,14 +6,18 @@ import {getMessageForDiaryAnalyze} from "@/helpers/getMessageForDiaryAnalyze.js"
 const MoodAIAnalysis = ({ entries }) => {
   const modalRef = useRef();
   const [analysis, setAnalysis] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleAISummary = async () => {
+    setIsLoading(true);
     try {
       const response = await chat(getMessageForDiaryAnalyze(entries));
       const content = response.text.replace(/```json/g, "").replace(/```/g, "");
       setAnalysis(JSON.parse(content))
     }catch (error){
       console.error(error)
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -48,7 +52,7 @@ const MoodAIAnalysis = ({ entries }) => {
               className='mt-5 btn bg-purple-500 hover:bg-purple-400 text-white'
               onClick={handleAISummary}
             >
-              Gen AI mood analysis ✨
+              {isLoading ? "Loading..." : "Gen AI mood analysis ✨"}
             </button>
           </div>
         </div>
